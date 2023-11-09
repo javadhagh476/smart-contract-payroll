@@ -18,8 +18,8 @@ module.exports = async (hre) => {
     from: deployer,
     args: arguments,
     log: true,
-    waitConfirmations: network.config.blockConfirmations || 1
-    });
+    waitConfirmations: blockConfirmations || 1
+  });
 
   // Verify the contract
   if (
