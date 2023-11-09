@@ -2,7 +2,7 @@
 
 # Payroll Smart Contract  
 
-Payroll Project - A Solidity smart contract for paying employees using the USDT token.
+Payroll Project - A Solidity smart contract for paying employees using the Custom token (USDT token) .
 
 ## Description
 
