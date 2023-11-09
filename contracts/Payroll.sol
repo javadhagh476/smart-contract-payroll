@@ -20,7 +20,7 @@ contract Payroll is Ownable {
     }
     address[] private employeeAddresses;
     mapping(address => Employee) public employers;
-    IERC20 private usdtToken;
+    IERC20 private customToken;
 
     // Events
     event EmployeerAdded(
@@ -55,7 +55,7 @@ contract Payroll is Ownable {
     constructor(
         address _usdtAddress
     ) Ownable(msg.sender) {
-        usdtToken = IERC20(_usdtAddress);
+        customToken = IERC20(_usdtAddress);
     }
 
     function addEmployee(
@@ -193,7 +193,7 @@ contract Payroll is Ownable {
         employers[employee].amountLastPayment = salaryEarned;
         employers[employee].lastPaymentTimestamp = block.timestamp;
 
-        bool success = usdtToken.transfer(employee, salaryEarned);
+        bool success = customToken.transfer(employee, salaryEarned);
 
         if (success) {
             emit Transfer(address(this), msg.sender, salaryEarned);
@@ -204,5 +204,13 @@ contract Payroll is Ownable {
         }
     }
 
+    function withdrawFunds(address fund) public onlyOwner {
+       bool success = customToken.transfer(fund, customToken.balanceOf(address(this)));
+        if (success) {
+            emit Transfer(address(this), msg.sender, customToken.balanceOf(address(this)));
+        } else {
+            revert PaymentWithdrawalFailed();
+        }
+    }
     receive() external payable {}
 }
