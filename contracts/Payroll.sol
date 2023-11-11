@@ -52,9 +52,7 @@ contract Payroll is Ownable {
         }
     }
 
-    constructor(
-        address _usdtAddress
-    ) Ownable(msg.sender) {
+    constructor(address _usdtAddress) Ownable(msg.sender) {
         customToken = IERC20(_usdtAddress);
     }
 
@@ -205,12 +203,22 @@ contract Payroll is Ownable {
     }
 
     function withdrawFunds(address fund) public onlyOwner {
-       bool success = customToken.transfer(fund, customToken.balanceOf(address(this)));
+        bool success = customToken.transfer(
+            fund,
+            customToken.balanceOf(address(this))
+        );
         if (success) {
-            emit Transfer(address(this), msg.sender, customToken.balanceOf(address(this)));
+            emit Transfer(
+                address(this),
+                msg.sender,
+                customToken.balanceOf(address(this))
+            );
         } else {
             revert PaymentWithdrawalFailed();
         }
     }
+
     receive() external payable {}
+
+    fallback() external payable {}
 }

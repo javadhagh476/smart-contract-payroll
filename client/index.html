@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Smart Contract</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body class="container">
+
+    <h1 class="mt-5">Payroll Smart Contract</h1>
+
+    <button class="btn btn-success my-3" onclick="connectWallet()">Connect to Wallet</button>
+
+    <div id="accountInfo" class="mb-3">
+        <p id="currentAccount">Current Account: </p>
+    </div>
+
+    <div class="form-group">
+        <label for="employeeAddress">Employee Address:</label>
+        <input type="text" class="form-control" value="0x215D5288EC108d6b203Ed6151AFF92fcE4A87c4e" id="employeeAddress" placeholder="Enter employee address">
+    </div>
+
+    <div class="form-group">
+        <label for="withdrawalAddress">Interval:</label>
+        <input type="text" class="form-control" value="1000" id="interval" placeholder="Enter Interval">
+    </div>
+    <div class="form-group">
+        <label for="withdrawalAddress">Amount:</label>
+        <input type="text" class="form-control" value="100" id="amount" placeholder="Enter Amount">
+    </div>
+    
+    <button class="btn btn-primary mr-2" onclick="addEmployee()">Add Employee</button>
+    <button class="btn btn-danger mr-2" onclick="removeEmployee()">Remove Employee</button>
+    <button class="btn btn-info mr-2" onclick="updateEmployee()">Update Employee</button>
+
+    <p></p>
+    <button class="btn btn-info mr-2" onclick="requestWithdraw()">Request Withdrawal</button>
+    <p></p>
+    <div class="form-group">
+        <label for="withdrawalAddress">Withdrawal Address:</label>
+        <input type="text" class="form-control" id="withdrawalAddress" placeholder="Enter withdrawal address">
+    </div>
+    
+    <button class="btn btn-warning" onclick="withdrawFunds()">Withdraw Funds</button>
+    <p></p>
+    <button class="btn btn-secondary" onclick="paymentInvoice()">payment Invoice</button>
+    <p></p>
+    <button class="btn btn-success" onclick="listOutEmployees()">list Out Employees</button>
+
+    <hr>
+
+    <h2>Employee List</h2>
+    <table id="employeeList">
+        <thead>
+            <tr>
+                <th>Employee Address</th>
+   
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>
