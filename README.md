@@ -43,7 +43,7 @@ You can customize these settings in the `hardhat.config.js` file to suit your sp
 
 1. Clone the project:
    ```sh
-   git clone https://github.com/javadhagh476/smart-contract-payroll.git
+   git clone https://github.com/jvddev/smart-contract-payroll.git
    cd payroll
 
 2. Install dependencies:
