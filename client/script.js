@@ -1,6 +1,6 @@
 const web3 = new Web3(window.ethereum);
 let defaultAccount;
-const contractAddress = "0xc54e6df8e5dac62bd7d3e877c57cd4f7c869895e";
+const contractAddress = "0x21c7f99DA4117fc172b5ED1c599Afd9b00d568A7";
 const contractABI = [
     {
       "inputs": [
@@ -423,6 +423,13 @@ async function requestWithdraw() {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     const from = accounts[0];
     await payrollContract.methods.requestWithdraw().send({from});
+}
+
+async function paymentInvoice() {
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const from = accounts[0];
+  const result = await payrollContract.methods.paymentInvoice().call({from});
+  alert('Salary Earned: ' + result);
 }
 
 async function withdrawFunds() {
