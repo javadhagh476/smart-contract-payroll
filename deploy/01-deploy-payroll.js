@@ -11,8 +11,11 @@ module.exports = async (hre) => {
   const blockConfirmations = developmentChains.includes(network.name)
     ? 1
     : network.config.blockConfirmations;
-  const arguments = ["0x779877A7B0D9E8603169DdbD7836e478b4624789"];
-console.log(deployer)
+
+  // chainlink sepolia address
+  var contractToken = "0x779877A7B0D9E8603169DdbD7836e478b4624789"
+  const arguments = [contractToken];
+
   // Deploy the contract
   const payroll = await deploy("Payroll", {
     from: deployer,

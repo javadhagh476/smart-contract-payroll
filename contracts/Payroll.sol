@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.7.0 <0.9.0;
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./SafeMath.sol";
 
+// Error declarations
 error InvalidEmployeeData(address recipient, uint256 amount, uint256 interval);
 error EmployeeAlreadyExists(address recipient);
 error InvalidReceiptDate(address recipient, uint256 interval);
 error PaymentWithdrawalFailed();
 
+/// @title Payroll contract for managing employee salaries
 contract Payroll is Ownable {
+    using SafeMath for uint;
+
+    // Struct to store employee information
     struct Employee {
         bool active;
         uint32 interval;
@@ -18,11 +24,17 @@ contract Payroll is Ownable {
         uint256 lastPaymentTimestamp;
         uint256 createdAt;
     }
+
+    // Array to store employee addresses
     address[] private employeeAddresses;
+
+    // Mapping to track employee details using their address
     mapping(address => Employee) public employers;
+
+    // Instance of the ERC20 token contract
     IERC20 private customToken;
 
-    // Events
+    // Events for contract actions
     event EmployeerAdded(
         address indexed employee,
         uint256 indexed amount,
@@ -39,11 +51,14 @@ contract Payroll is Ownable {
         address indexed to,
         uint256 indexed amount
     );
+
+    /// @dev Modifier to check if an employee exists
     modifier employeeExists(address employee) {
         require(employers[employee].amount > 0, "Employee does not exist");
         _;
     }
 
+    // Function to calculate time since the last payment for an employee
     function _calculateDate(address employee) private view returns (uint256) {
         if (employers[employee].lastPaymentTimestamp == 0) {
             return block.timestamp - employers[employee].createdAt;
@@ -52,22 +67,28 @@ contract Payroll is Ownable {
         }
     }
 
+    // Constructor function initializes the contract
     constructor(address _usdtAddress) Ownable(msg.sender) {
         customToken = IERC20(_usdtAddress);
     }
 
+    // Function to add a new employee to the payroll
     function addEmployee(
         address employee,
         uint256 amount,
         uint32 interval
     ) public onlyOwner {
+        // Check for valid employee data
         if (amount == 0 || interval == 0) {
             revert InvalidEmployeeData(employee, amount, interval);
         }
 
+        // Check if the employee already exists
         if (employers[employee].amount > 0) {
             revert EmployeeAlreadyExists(employee);
         }
+
+        // Add employee details to storage
         employeeAddresses.push(employee);
         Employee storage newEmployer = employers[employee];
         newEmployer.active = true;
@@ -78,9 +99,11 @@ contract Payroll is Ownable {
         emit EmployeerAdded(employee, amount, interval);
     }
 
+    // Function to remove an employee from the payroll
     function removeEmployee(
         address employee
     ) public onlyOwner employeeExists(employee) {
+        // Remove employee from the array and delete details from mapping
         for (uint256 i = 0; i < employeeAddresses.length; ++i) {
             if (employeeAddresses[i] == employee) {
                 if (i < employeeAddresses.length - 1) {
@@ -96,6 +119,7 @@ contract Payroll is Ownable {
         }
     }
 
+    // Function to update an existing employee's details
     function updateEmployee(
         address employee,
         uint256 amount,
@@ -103,6 +127,7 @@ contract Payroll is Ownable {
     ) public onlyOwner employeeExists(employee) {
         Employee storage updatedEmployee = employers[employee];
 
+        // Update employee details if provided
         if (amount > 0) {
             updatedEmployee.amount = amount;
         }
@@ -112,6 +137,7 @@ contract Payroll is Ownable {
         }
     }
 
+    // Function to list all employees added to the payroll
     function listOutEmployees()
         public
         view
@@ -121,6 +147,7 @@ contract Payroll is Ownable {
         return employeeAddresses;
     }
 
+    // Function to calculate the salary earned by an employee
     function paymentInvoice()
         public
         view
@@ -130,78 +157,46 @@ contract Payroll is Ownable {
         address employee = msg.sender;
         uint256 timeSinceLastPayment = _calculateDate(employee);
 
+        // Check if the payment receipt date is valid
         if (timeSinceLastPayment < employers[employee].interval) {
             revert InvalidReceiptDate(employee, employers[employee].interval);
         }
-        uint256 secondsInADay = 86400;
-        uint256 daysInAMonth = 30;
 
-        uint256 timeToDateInSalary = timeSinceLastPayment / secondsInADay;
-        uint256 salaryEarned = (employers[employee].amount *
-            timeToDateInSalary) / daysInAMonth;
+        // Calculate earned salary based on time passed since last payment
+        uint256 timeToDateInSalary = timeSinceLastPayment.div(
+            employers[employee].interval
+        );
+        uint256 salaryEarned = employers[employee].amount.mul(
+            timeToDateInSalary
+        );
 
-        return (salaryEarned);
+        return salaryEarned;
     }
 
-    // function requestWithdraw() public payable employeeExists(msg.sender) {
-    //     address employee = msg.sender;
-    //     uint256 timeSinceLastPayment = _calculateDate(employee);
-
-    //     if (timeSinceLastPayment < employers[employee].interval) {
-    //         revert InvalidReceiptDate(employee, employers[employee].interval);
-    //     }
-    //     uint256 secondsInADay = 86400;
-    //     uint256 daysInAMonth = 30;
-
-    //     uint256 timeToDateInSalary = timeSinceLastPayment / secondsInADay;
-    //     uint256 salaryEarned = (employers[employee].amount *
-    //         timeToDateInSalary) / daysInAMonth;
-    //     if (salaryEarned > address(this).balance) {
-    //         emit InsufficientBalance(
-    //             msg.sender,
-    //             salaryEarned,
-    //             address(this).balance
-    //         );
-    //     } else {
-    //         uint256 oldAmount = employers[employee].amountLastPayment;
-    //         uint256 lastPayment = employers[employee].amountLastPayment;
-
-    //         employers[employee].amountLastPayment = salaryEarned;
-    //         employers[employee].lastPaymentTimestamp = block.timestamp;
-
-    //         (bool success, ) = payable(msg.sender).call{value: salaryEarned}(
-    //             ""
-    //         );
-    //         if (success) {
-    //             emit Transfer(address(this), msg.sender, salaryEarned);
-    //         } else {
-    //             employers[employee].amountLastPayment = oldAmount;
-    //             employers[employee].lastPaymentTimestamp = lastPayment;
-    //             revert PaymentWithdrawalFailed();
-    //         }
-    //     }
-    // }
-
+    // Function to allow an employee to withdraw their salary
     function requestWithdraw() public employeeExists(msg.sender) {
         address employee = msg.sender;
         uint256 salaryEarned = paymentInvoice();
         uint256 oldAmount = employers[employee].amountLastPayment;
         uint256 lastPayment = employers[employee].amountLastPayment;
 
+        // Update employee's payment details and attempt token transfer
         employers[employee].amountLastPayment = salaryEarned;
         employers[employee].lastPaymentTimestamp = block.timestamp;
-
-        bool success = customToken.transfer(employee, salaryEarned);
+        uint256 tokenAmount = salaryEarned * 10 ** 18;
+        bool success = customToken.transfer(employee, tokenAmount);
 
         if (success) {
             emit Transfer(address(this), msg.sender, salaryEarned);
         } else {
+            // Revert changes if payment transfer fails
             employers[employee].amountLastPayment = oldAmount;
             employers[employee].lastPaymentTimestamp = lastPayment;
             revert PaymentWithdrawalFailed();
         }
     }
 
+    // Function to allow the owner to withdraw funds from the contract
     function withdrawFunds(address fund) public onlyOwner {
         bool success = customToken.transfer(
             fund,
@@ -218,6 +213,7 @@ contract Payroll is Ownable {
         }
     }
 
+    // Fallback functions to receive and handle Ether
     receive() external payable {}
 
     fallback() external payable {}
